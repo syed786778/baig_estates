@@ -1,50 +1,34 @@
 /* ============================================================
-   BAIG ESTATES — Main JavaScript
-   Features: Nav scroll, scroll animations, counter, slider,
-             project tabs, form handling, back-to-top
+   PROPRUSH DEVELOPERS — script.js
+   Fixed: counter anti-flicker, testimonials proper sizing,
+          video lightbox, form, scroll animations
 ============================================================ */
-
 'use strict';
 
 // ============================================================
-// NAVBAR SCROLL BEHAVIOR
+// NAVBAR SCROLL
 // ============================================================
 const navbar = document.getElementById('navbar');
-const navLinks = document.querySelectorAll('.nav-link');
 
-function handleNavScroll() {
-  if (window.scrollY > 60) {
-    navbar.classList.add('scrolled');
-  } else {
-    navbar.classList.remove('scrolled');
-  }
+window.addEventListener('scroll', () => {
+  navbar.classList.toggle('scrolled', window.scrollY > 60);
 
-  // Active nav link based on scroll position
+  // Active nav highlighting
   const sections = document.querySelectorAll('section[id]');
-  let currentSection = '';
-
-  sections.forEach(section => {
-    const sectionTop = section.offsetTop - 120;
-    if (window.scrollY >= sectionTop) {
-      currentSection = section.getAttribute('id');
-    }
+  let current = '';
+  sections.forEach(s => {
+    if (window.scrollY >= s.offsetTop - 130) current = s.id;
   });
-
-  navLinks.forEach(link => {
-    link.classList.remove('active');
-    if (link.getAttribute('href') === `#${currentSection}`) {
-      link.classList.add('active');
-    }
+  document.querySelectorAll('.nav-link').forEach(link => {
+    link.classList.toggle('active', link.getAttribute('href') === `#${current}`);
   });
-}
-
-window.addEventListener('scroll', handleNavScroll, { passive: true });
+}, { passive: true });
 
 // ============================================================
-// HAMBURGER MENU
+// HAMBURGER
 // ============================================================
 const hamburger = document.getElementById('hamburger');
-const navMenu = document.getElementById('navMenu');
+const navMenu   = document.getElementById('navMenu');
 
 hamburger.addEventListener('click', () => {
   hamburger.classList.toggle('open');
@@ -52,7 +36,6 @@ hamburger.addEventListener('click', () => {
   document.body.style.overflow = navMenu.classList.contains('open') ? 'hidden' : '';
 });
 
-// Close menu on link click
 navMenu.querySelectorAll('.nav-link').forEach(link => {
   link.addEventListener('click', () => {
     hamburger.classList.remove('open');
@@ -61,322 +44,239 @@ navMenu.querySelectorAll('.nav-link').forEach(link => {
   });
 });
 
-// ============================================================
-// SCROLL REVEAL ANIMATION
-// ============================================================
-const revealElements = document.querySelectorAll('.reveal-up, .reveal-left, .reveal-right');
-
-const revealObserver = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      entry.target.classList.add('visible');
-      // Unobserve after animating to save resources
-      revealObserver.unobserve(entry.target);
-    }
-  });
-}, {
-  threshold: 0.12,
-  rootMargin: '0px 0px -60px 0px'
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && navMenu.classList.contains('open')) {
+    hamburger.classList.remove('open');
+    navMenu.classList.remove('open');
+    document.body.style.overflow = '';
+  }
 });
 
-revealElements.forEach(el => revealObserver.observe(el));
-
 // ============================================================
-// ANIMATED COUNTER
+// SCROLL REVEAL
 // ============================================================
-const statNums = document.querySelectorAll('.stat-num');
-let countersStarted = false;
+const revealEls = document.querySelectorAll('.reveal-up, .reveal-left, .reveal-right');
 
-function animateCounter(el) {
-  const target = parseInt(el.dataset.target);
-  const duration = 1800;
-  const step = target / (duration / 16);
-  let current = 0;
-
-  const timer = setInterval(() => {
-    current += step;
-    if (current >= target) {
-      current = target;
-      clearInterval(timer);
-    }
-    el.textContent = Math.floor(current);
-  }, 16);
-}
-
-const heroObserver = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting && !countersStarted) {
-      countersStarted = true;
-      statNums.forEach(el => animateCounter(el));
+const revealObs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('visible');
+      revealObs.unobserve(e.target);
     }
   });
-}, { threshold: 0.3 });
+}, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
 
-const heroStats = document.querySelector('.hero-stats');
-if (heroStats) heroObserver.observe(heroStats);
+revealEls.forEach(el => revealObs.observe(el));
+
+// ============================================================
+// COUNTER ANIMATION — no blinking, no cursor artifacts
+// ============================================================
+let countersRun = false;
+
+function runCounters() {
+  if (countersRun) return;
+  countersRun = true;
+  document.querySelectorAll('.stat-num').forEach(el => {
+    const target = parseInt(el.dataset.target, 10);
+    const duration = 1600;
+    const fps = 60;
+    const steps = Math.round(duration / (1000 / fps));
+    let step = 0;
+    const timer = setInterval(() => {
+      step++;
+      const progress = step / steps;
+      // easeOutCubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      el.textContent = Math.round(eased * target);
+      if (step >= steps) {
+        el.textContent = target;
+        clearInterval(timer);
+      }
+    }, 1000 / fps);
+  });
+}
+
+const statsSection = document.querySelector('.hero-stats');
+if (statsSection) {
+  const statsObs = new IntersectionObserver(entries => {
+    if (entries[0].isIntersecting) {
+      runCounters();
+      statsObs.disconnect();
+    }
+  }, { threshold: 0.4 });
+  statsObs.observe(statsSection);
+}
 
 // ============================================================
 // PROJECT TABS
 // ============================================================
-const tabBtns = document.querySelectorAll('.tab-btn');
-const tabContents = document.querySelectorAll('.tab-content');
-
-tabBtns.forEach(btn => {
+document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
-    const targetTab = btn.dataset.tab;
-
-    // Update buttons
-    tabBtns.forEach(b => b.classList.remove('active'));
+    const tab = btn.dataset.tab;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-
-    // Update content panels
-    tabContents.forEach(content => {
-      content.classList.remove('active');
-      if (content.id === `tab-${targetTab}`) {
-        content.classList.add('active');
-        // Re-trigger reveal animations for newly shown cards
-        content.querySelectorAll('.reveal-up').forEach(el => {
-          el.classList.remove('visible');
-          setTimeout(() => {
-            revealObserver.observe(el);
-          }, 50);
-        });
-      }
+    document.querySelectorAll('.tab-content').forEach(c => {
+      c.classList.toggle('active', c.id === `tab-${tab}`);
+    });
+    // Re-observe newly shown reveal elements
+    document.querySelectorAll(`#tab-${tab} .reveal-up`).forEach(el => {
+      el.classList.remove('visible');
+      setTimeout(() => revealObs.observe(el), 40);
     });
   });
 });
 
 // ============================================================
-// TESTIMONIALS SLIDER
+// TESTIMONIALS SLIDER — fixed card widths, no overflow
 // ============================================================
-const track = document.getElementById('testimonialTrack');
-const prevBtn = document.getElementById('prevBtn');
-const nextBtn = document.getElementById('nextBtn');
-const dotsContainer = document.getElementById('sliderDots');
+const track    = document.getElementById('testiTrack');
+const dotsWrap = document.getElementById('testiDots');
+const prevBtn  = document.getElementById('testiPrev');
+const nextBtn  = document.getElementById('testiNext');
 
-let currentSlide = 0;
-let slidesPerView = getSlidesPerView();
-let totalSlides;
+let cur = 0;
+let perView = 3;
 let dots = [];
-let autoSlideTimer;
+let total;
+let autoTimer;
 
-function getSlidesPerView() {
-  if (window.innerWidth <= 768) return 1;
+function getPerView() {
+  if (window.innerWidth <= 768)  return 1;
   if (window.innerWidth <= 1024) return 2;
   return 3;
 }
 
-function initSlider() {
-  const cards = track.querySelectorAll('.testimonial-card');
-  slidesPerView = getSlidesPerView();
-  totalSlides = Math.max(0, cards.length - slidesPerView);
+function buildSlider() {
+  const cards = track.querySelectorAll('.testi-card');
+  perView = getPerView();
+  total = Math.max(0, cards.length - perView);
 
-  // Set card widths
-  cards.forEach(card => {
-    card.style.minWidth = `calc(${100 / slidesPerView}% - ${(slidesPerView - 1) * 24 / slidesPerView}px)`;
+  // Set card flex-basis from JS to match current perView
+  const gap = 20;
+  cards.forEach(c => {
+    c.style.flex = `0 0 calc(${100 / perView}% - ${gap * (perView - 1) / perView}px)`;
   });
 
-  // Build dots
-  dotsContainer.innerHTML = '';
+  // Rebuild dots
+  dotsWrap.innerHTML = '';
   dots = [];
-  for (let i = 0; i <= totalSlides; i++) {
-    const dot = document.createElement('div');
-    dot.className = 'slider-dot';
-    if (i === 0) dot.classList.add('active');
-    dot.addEventListener('click', () => goToSlide(i));
-    dotsContainer.appendChild(dot);
-    dots.push(dot);
+  for (let i = 0; i <= total; i++) {
+    const d = document.createElement('div');
+    d.className = `t-dot${i === 0 ? ' active' : ''}`;
+    d.addEventListener('click', () => { slideTo(i); resetAuto(); });
+    dotsWrap.appendChild(d);
+    dots.push(d);
   }
 
-  goToSlide(0);
+  slideTo(Math.min(cur, total));
 }
 
-function goToSlide(index) {
-  currentSlide = Math.max(0, Math.min(index, totalSlides));
-  const cardWidth = track.querySelector('.testimonial-card')?.offsetWidth || 0;
-  const gap = 24;
-  track.style.transform = `translateX(-${currentSlide * (cardWidth + gap)}px)`;
-
-  // Update dots
-  dots.forEach((dot, i) => {
-    dot.classList.toggle('active', i === currentSlide);
-  });
-
-  // Update buttons
-  prevBtn.style.opacity = currentSlide === 0 ? '0.4' : '1';
-  nextBtn.style.opacity = currentSlide === totalSlides ? '0.4' : '1';
+function slideTo(i) {
+  cur = Math.max(0, Math.min(i, total));
+  const card = track.querySelector('.testi-card');
+  if (!card) return;
+  const cardW = card.offsetWidth;
+  const gap   = 20;
+  track.style.transform = `translateX(-${cur * (cardW + gap)}px)`;
+  dots.forEach((d, idx) => d.classList.toggle('active', idx === cur));
+  prevBtn.style.opacity = cur === 0      ? '0.35' : '1';
+  nextBtn.style.opacity = cur >= total   ? '0.35' : '1';
 }
 
-prevBtn.addEventListener('click', () => {
-  goToSlide(currentSlide - 1);
-  resetAutoSlide();
+prevBtn.addEventListener('click', () => { slideTo(cur - 1); resetAuto(); });
+nextBtn.addEventListener('click', () => { slideTo(cur + 1); resetAuto(); });
+
+function startAuto() {
+  autoTimer = setInterval(() => slideTo(cur >= total ? 0 : cur + 1), 4500);
+}
+function resetAuto() { clearInterval(autoTimer); startAuto(); }
+
+// Touch swipe
+let tx = 0;
+track.addEventListener('touchstart', e => { tx = e.changedTouches[0].screenX; }, { passive: true });
+track.addEventListener('touchend',   e => {
+  const diff = tx - e.changedTouches[0].screenX;
+  if (Math.abs(diff) > 48) { slideTo(diff > 0 ? cur + 1 : cur - 1); resetAuto(); }
+}, { passive: true });
+
+// Keyboard
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowLeft')  { slideTo(cur - 1); resetAuto(); }
+  if (e.key === 'ArrowRight') { slideTo(cur + 1); resetAuto(); }
 });
 
-nextBtn.addEventListener('click', () => {
-  goToSlide(currentSlide + 1);
-  resetAutoSlide();
-});
-
-function startAutoSlide() {
-  autoSlideTimer = setInterval(() => {
-    if (currentSlide >= totalSlides) {
-      goToSlide(0);
-    } else {
-      goToSlide(currentSlide + 1);
-    }
-  }, 4500);
-}
-
-function resetAutoSlide() {
-  clearInterval(autoSlideTimer);
-  startAutoSlide();
-}
-
-// Handle resize
-let resizeTimeout;
+// Resize
+let resizeT;
 window.addEventListener('resize', () => {
-  clearTimeout(resizeTimeout);
-  resizeTimeout = setTimeout(() => {
-    initSlider();
-  }, 250);
-});
-
-// Initialize
-initSlider();
-startAutoSlide();
-
-// Touch/Swipe support for mobile
-let touchStartX = 0;
-let touchEndX = 0;
-
-track.addEventListener('touchstart', e => {
-  touchStartX = e.changedTouches[0].screenX;
+  clearTimeout(resizeT);
+  resizeT = setTimeout(buildSlider, 200);
 }, { passive: true });
 
-track.addEventListener('touchend', e => {
-  touchEndX = e.changedTouches[0].screenX;
-  const diff = touchStartX - touchEndX;
-  if (Math.abs(diff) > 50) {
-    if (diff > 0) goToSlide(currentSlide + 1);
-    else goToSlide(currentSlide - 1);
-    resetAutoSlide();
-  }
-}, { passive: true });
+buildSlider();
+startAuto();
 
 // ============================================================
-// CONTACT FORM HANDLING
+// VIDEO LIGHTBOX
 // ============================================================
-const contactForm = document.getElementById('contactForm');
-const formSuccess = document.getElementById('formSuccess');
-const submitText = document.getElementById('submitText');
-const submitLoader = document.getElementById('submitLoader');
+const lightbox  = document.getElementById('videoLightbox');
+const vlOverlay = document.getElementById('vlOverlay');
+const vlClose   = document.getElementById('vlClose');
+const vlVideo   = document.getElementById('vlVideo');
+const galleryVT = document.getElementById('galleryVideoTile');
 
-contactForm.addEventListener('submit', async (e) => {
-  e.preventDefault();
+function openLightbox() {
+  lightbox.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  vlVideo.play().catch(() => {});
+}
 
-  // Validate
-  const name = document.getElementById('name').value.trim();
-  const phone = document.getElementById('phone').value.trim();
+function closeLightbox() {
+  lightbox.classList.remove('open');
+  document.body.style.overflow = '';
+  vlVideo.pause();
+  vlVideo.currentTime = 0;
+}
 
-  if (!name) { showFieldError('name', 'Please enter your name'); return; }
-  if (!phone || phone.length < 10) { showFieldError('phone', 'Please enter a valid phone number'); return; }
+if (galleryVT) galleryVT.addEventListener('click', openLightbox);
+if (vlOverlay) vlOverlay.addEventListener('click', closeLightbox);
+if (vlClose)   vlClose.addEventListener('click', closeLightbox);
 
-  // Show loader
-  submitText.style.display = 'none';
-  submitLoader.style.display = 'inline-flex';
-
-  // Simulate form submission (UI demo)
-  await new Promise(resolve => setTimeout(resolve, 1800));
-
-  // Show success
-  contactForm.style.display = 'none';
-  formSuccess.style.display = 'block';
-  formSuccess.style.animation = 'fadeInUp 0.5s ease forwards';
-});
-
-function showFieldError(fieldId, message) {
-  const field = document.getElementById(fieldId);
-  field.style.borderColor = '#e05757';
-  field.focus();
-
-  // Remove error after user starts typing
-  field.addEventListener('input', function onInput() {
-    field.style.borderColor = '';
-    field.removeEventListener('input', onInput);
-  });
+// Also play gallery thumbnail video on hover
+const thumbVid = document.querySelector('.g-thumb-vid');
+if (thumbVid && galleryVT) {
+  galleryVT.addEventListener('mouseenter', () => thumbVid.play().catch(() => {}));
+  galleryVT.addEventListener('mouseleave', () => thumbVid.pause());
 }
 
 // ============================================================
-// BACK TO TOP
+// GALLERY LIGHTBOX (for non-video tiles)
 // ============================================================
-const backToTopBtn = document.getElementById('backToTop');
-
-window.addEventListener('scroll', () => {
-  if (window.scrollY > 400) {
-    backToTopBtn.classList.add('visible');
-  } else {
-    backToTopBtn.classList.remove('visible');
-  }
-}, { passive: true });
-
-backToTopBtn.addEventListener('click', () => {
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-});
-
-// ============================================================
-// SMOOTH SCROLL FOR ANCHOR LINKS
-// ============================================================
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-  anchor.addEventListener('click', function (e) {
-    const targetId = this.getAttribute('href');
-    if (targetId === '#') return;
-
-    const target = document.querySelector(targetId);
-    if (target) {
-      e.preventDefault();
-      const navHeight = navbar.offsetHeight;
-      const targetPosition = target.offsetTop - navHeight - 20;
-      window.scrollTo({ top: targetPosition, behavior: 'smooth' });
-    }
-  });
-});
-
-// ============================================================
-// GALLERY LIGHTBOX (Simple)
-// ============================================================
-const galleryItems = document.querySelectorAll('.gallery-item');
-
-galleryItems.forEach(item => {
+document.querySelectorAll('.g-item:not(.g-video-tile)').forEach(item => {
   item.addEventListener('click', () => {
-    const label = item.querySelector('.gallery-overlay span')?.textContent || 'Gallery Image';
+    const caption = item.dataset.caption || 'Gallery Image';
+    const realImg = item.querySelector('.g-real-img');
 
-    // Create lightbox
     const overlay = document.createElement('div');
     overlay.style.cssText = `
-      position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,0.92);
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; animation: fadeIn 0.3s ease;
+      position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.92);
+      display:flex;align-items:center;justify-content:center;cursor:pointer;
+      animation:fadeInFast .25s ease;
     `;
 
-    overlay.innerHTML = `
-      <div style="text-align: center; padding: 24px; max-width: 800px; width: 100%;">
-        <div style="
-          width: 100%; aspect-ratio: 16/9; background: var(--color-dark-3);
-          border: 1px solid rgba(201,168,76,0.2); border-radius: 12px;
-          display: flex; flex-direction: column; align-items: center; justify-content: center;
-          gap: 16px; color: rgba(255,255,255,0.4); font-size: 1rem;
-          background: ${getComputedStyle(item).background};
-        ">
-          <i class="fas fa-image" style="font-size: 3rem; color: rgba(201,168,76,0.3);"></i>
-          <p style="font-family: 'Jost', sans-serif;">${label}</p>
-          <p style="font-size: 0.78rem; opacity: 0.5;">Image placeholder — add your project photos here</p>
-        </div>
-        <p style="
-          margin-top: 16px; font-family: 'Jost', sans-serif;
-          font-size: 0.9rem; color: rgba(255,255,255,0.5);
-        ">Click anywhere to close</p>
-      </div>
-    `;
+    if (realImg) {
+      overlay.innerHTML = `
+        <div style="max-width:90vw;max-height:90vh;text-align:center">
+          <img src="${realImg.src}" alt="${caption}" style="max-width:100%;max-height:82vh;border-radius:10px;object-fit:contain;" />
+          <p style="margin-top:12px;color:rgba(255,255,255,.6);font-family:'DM Sans',sans-serif;font-size:.88rem;">${caption}</p>
+        </div>`;
+    } else {
+      overlay.innerHTML = `
+        <div style="text-align:center;padding:32px;color:rgba(255,255,255,.4);font-family:'DM Sans',sans-serif">
+          <i class="fas fa-image" style="font-size:3rem;color:rgba(201,168,76,.35);display:block;margin-bottom:14px;"></i>
+          <p>${caption}</p>
+          <p style="font-size:.75rem;margin-top:8px;opacity:.5">Add your real project photo here</p>
+        </div>`;
+    }
 
     overlay.addEventListener('click', () => overlay.remove());
     document.body.appendChild(overlay);
@@ -384,60 +284,84 @@ galleryItems.forEach(item => {
 });
 
 // ============================================================
-// NUMBER FORMAT UTILITY
+// CONTACT FORM
 // ============================================================
-function formatIndianNumber(num) {
-  return num.toLocaleString('en-IN');
+const form        = document.getElementById('contactForm');
+const formSuccess = document.getElementById('formSuccess');
+const submitBtn   = document.getElementById('submitBtn');
+
+form.addEventListener('submit', async e => {
+  e.preventDefault();
+
+  const name  = document.getElementById('fname').value.trim();
+  const phone = document.getElementById('fphone').value.trim();
+
+  if (!name)                { flashError('fname',  'Please enter your full name'); return; }
+  if (phone.length < 10)    { flashError('fphone', 'Please enter a valid phone number'); return; }
+
+  // Loading state
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+
+  // Simulate async send (replace with Formspree/EmailJS action)
+  await delay(1800);
+
+  form.style.display = 'none';
+  formSuccess.style.display = 'block';
+});
+
+function flashError(id, msg) {
+  const el = document.getElementById(id);
+  el.style.borderColor = '#e05252';
+  el.focus();
+  el.addEventListener('input', function clear() {
+    el.style.borderColor = '';
+    el.removeEventListener('input', clear);
+  });
+  // Brief shake animation
+  el.style.animation = 'shake .3s ease';
+  el.addEventListener('animationend', () => el.style.animation = '', { once: true });
 }
 
-// ============================================================
-// PAGE LOAD ANIMATION
-// ============================================================
-window.addEventListener('load', () => {
-  document.body.classList.add('loaded');
-
-  // Animate hero elements
-  const heroElements = document.querySelectorAll('.hero .reveal-up');
-  heroElements.forEach((el, i) => {
-    setTimeout(() => {
-      el.classList.add('visible');
-    }, 200 + i * 150);
-  });
-});
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 // ============================================================
-// LAZY LOAD PLACEHOLDER GRADIENTS (Performance)
+// BACK TO TOP
 // ============================================================
-const placeholders = document.querySelectorAll('[class*="img-placeholder"]');
+const backTop = document.getElementById('backTop');
+window.addEventListener('scroll', () => backTop.classList.toggle('visible', window.scrollY > 400), { passive: true });
+backTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 
-const lazyObserver = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      entry.target.classList.add('loaded');
-      lazyObserver.unobserve(entry.target);
+// ============================================================
+// SMOOTH ANCHOR SCROLL
+// ============================================================
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
+    const id = a.getAttribute('href');
+    if (id === '#') return;
+    const target = document.querySelector(id);
+    if (target) {
+      e.preventDefault();
+      window.scrollTo({ top: target.offsetTop - navbar.offsetHeight - 16, behavior: 'smooth' });
     }
   });
-}, { rootMargin: '200px' });
-
-placeholders.forEach(el => lazyObserver.observe(el));
-
-// ============================================================
-// KEYBOARD ACCESSIBILITY
-// ============================================================
-document.addEventListener('keydown', (e) => {
-  // Close mobile menu on Escape
-  if (e.key === 'Escape' && navMenu.classList.contains('open')) {
-    hamburger.classList.remove('open');
-    navMenu.classList.remove('open');
-    document.body.style.overflow = '';
-  }
-
-  // Slider keyboard control
-  if (e.key === 'ArrowLeft') goToSlide(currentSlide - 1);
-  if (e.key === 'ArrowRight') goToSlide(currentSlide + 1);
 });
 
-console.log(
-  '%cBaig Estates 🏡 — Building Dreams with Trust',
-  'color: #c9a84c; font-size: 14px; font-weight: bold; font-family: serif;'
-);
+// ============================================================
+// PAGE LOAD — trigger hero reveals
+// ============================================================
+window.addEventListener('load', () => {
+  document.querySelectorAll('.hero .reveal-up').forEach((el, i) => {
+    setTimeout(() => el.classList.add('visible'), 200 + i * 140);
+  });
+});
+
+// Add shake keyframe dynamically
+const shakeStyle = document.createElement('style');
+shakeStyle.textContent = `
+  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+  @keyframes fadeInFast { from{opacity:0} to{opacity:1} }
+`;
+document.head.appendChild(shakeStyle);
+
+console.log('%cProprush Developers 🏡 — Building Dreams with Trust', 'color:#c9a84c;font-size:13px;font-weight:bold;font-family:serif;');
