@@ -251,14 +251,7 @@ if (formEl) {
     if (!name)             { flash('name',  'Please enter your name'); return; }
     if (phone.length < 10) { flash('phone', 'Please enter a valid 10-digit number'); return; }
 
-    // Show loader
-    if (submitText) submitText.style.display = 'none';
-    if (submitLoad) submitLoad.style.display = 'inline-flex';
-
-    // Small delay for UX
-    await new Promise(r => setTimeout(r, 1200));
-
-    // Build WhatsApp message
+    // Build WhatsApp message FIRST (before any async gap)
     const waText = [
       `🏡 *New Plot Enquiry — Proprush Developers*`,
       ``,
@@ -274,12 +267,24 @@ if (formEl) {
 
     const waURL = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(waText)}`;
 
-    // Show success message
+    // Open WhatsApp via hidden anchor — never blocked by browsers
+    const a = document.createElement('a');
+    a.href = waURL;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    // Show loader
+    if (submitText) submitText.style.display = 'none';
+    if (submitLoad) submitLoad.style.display = 'inline-flex';
+
+    // Short delay then show success screen
+    await new Promise(r => setTimeout(r, 1200));
+
     formEl.style.display = 'none';
     if (successEl) successEl.style.display = 'block';
-
-    // Open WhatsApp
-    window.open(waURL, '_blank');
   });
 }
 
