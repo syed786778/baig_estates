@@ -501,7 +501,275 @@
       <h2 class="section-title">From Raw Land to<br><em>Your Dream Plot</em></h2>
     </div>
     <div class="reveal-up" id="journeyGraphic">
-      <!-- Paste the full HTML of the animated widget here -->
+      
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap');
+  .pj-wrap { background:#0d1a0d; border-radius:16px; padding:32px 24px 28px; font-family:'Outfit',sans-serif; overflow:hidden; }
+  .pj-title { text-align:center; color:#c9a84c; font-size:13px; letter-spacing:4px; text-transform:uppercase; margin-bottom:6px; }
+  .pj-sub { text-align:center; color:rgba(255,255,255,0.4); font-size:12px; margin-bottom:28px; letter-spacing:1px; }
+  .stages { display:flex; gap:0; align-items:stretch; position:relative; }
+  .stage { flex:1; position:relative; cursor:pointer; }
+  .stage-inner { margin:0 6px; border-radius:12px; overflow:hidden; border:1.5px solid rgba(255,255,255,0.08); transition:border-color 0.3s, transform 0.3s; }
+  .stage.active .stage-inner { border-color:#c9a84c; transform:translateY(-4px); }
+  .scene { height:160px; position:relative; overflow:hidden; }
+  .stage-footer { background:#111a11; padding:10px 12px; }
+  .stage-num { font-size:10px; color:#c9a84c; letter-spacing:2px; margin-bottom:2px; }
+  .stage-name { font-size:13px; font-weight:600; color:#fff; }
+  .stage-desc { font-size:11px; color:rgba(255,255,255,0.4); margin-top:2px; line-height:1.4; }
+  .connector { display:flex; align-items:center; padding-bottom:60px; }
+  .conn-line { width:1px; flex:1; border-top:1.5px dashed rgba(201,168,76,0.3); }
+  .conn-arrow { width:8px; height:8px; border-top:1.5px solid #c9a84c; border-right:1.5px solid #c9a84c; transform:rotate(45deg); margin-left:-4px; margin-bottom:1px; }
+  .progress-row { display:flex; align-items:center; gap:8px; margin-top:20px; }
+  .prog-step { flex:1; height:3px; background:rgba(255,255,255,0.1); border-radius:2px; position:relative; overflow:hidden; }
+  .prog-fill { height:100%; background:#c9a84c; border-radius:2px; width:0%; transition:width 1s ease; }
+  .prog-label { display:flex; justify-content:space-between; margin-top:10px; }
+  .pl-item { flex:1; text-align:center; font-size:10px; color:rgba(255,255,255,0.3); letter-spacing:1px; transition:color 0.3s; }
+  .pl-item.active { color:#c9a84c; }
+  .auto-btn { display:block; margin:18px auto 0; background:rgba(201,168,76,0.12); border:1px solid rgba(201,168,76,0.3); color:#c9a84c; font-family:'Outfit',sans-serif; font-size:12px; letter-spacing:2px; padding:8px 24px; border-radius:30px; cursor:pointer; text-transform:uppercase; transition:background 0.2s; }
+  .auto-btn:hover { background:rgba(201,168,76,0.22); }
+
+  /* ── SCENE 1: Raw land ── */
+  .s1-sky { position:absolute; inset:0; background:#1a2e1a; }
+  .s1-sun { position:absolute; top:18px; right:28px; width:22px; height:22px; background:#c9a84c; border-radius:50%; }
+  .s1-hill { position:absolute; bottom:50px; left:-10px; right:-10px; height:70px; background:#2d4a1e; border-radius:60% 60% 0 0; }
+  .s1-dirt { position:absolute; bottom:0; left:0; right:0; height:55px; background:#5c3d1e; }
+  .s1-rock { position:absolute; bottom:52px; left:30px; width:18px; height:12px; background:#3a2a14; border-radius:4px 4px 0 0; }
+  .s1-rock2 { position:absolute; bottom:52px; right:40px; width:12px; height:8px; background:#3a2a14; border-radius:3px 3px 0 0; }
+  .s1-grass { position:absolute; bottom:50px; left:0; right:0; height:6px; background:#3d6b1f; }
+  .s1-tree { position:absolute; bottom:56px; left:18px; }
+  .s1-trunk { width:5px; height:20px; background:#5c3d1e; margin:0 auto; }
+  .s1-leaves { width:22px; height:22px; background:#2d5a14; border-radius:50%; margin-left:-9px; margin-top:-8px; }
+  .s1-tree2 { position:absolute; bottom:56px; right:22px; }
+
+  /* ── SCENE 2: Survey ── */
+  .s2-bg { position:absolute; inset:0; background:#1e1e12; }
+  .s2-grid { position:absolute; inset:0; }
+  .s2-pole { position:absolute; width:3px; background:#c9a84c; bottom:40px; }
+  .s2-string { position:absolute; height:1.5px; background:rgba(201,168,76,0.6); }
+  .s2-land { position:absolute; bottom:0; left:0; right:0; height:45px; background:#4a3520; }
+  .s2-flag { position:absolute; width:14px; height:10px; background:#e74c3c; clip-path:polygon(0 0,100% 25%,0 100%); }
+
+  /* ── SCENE 3: Development ── */
+  .s3-bg { position:absolute; inset:0; background:#0e1a1e; }
+  .s3-land { position:absolute; bottom:0; left:0; right:0; height:45px; background:#3a3020; }
+  .s3-road-h { position:absolute; bottom:40px; left:0; right:0; height:8px; background:#2a2a2a; }
+  .s3-road-v { position:absolute; bottom:0; left:50%; width:8px; height:120px; background:#2a2a2a; transform:translateX(-50%); }
+  .s3-plot { position:absolute; border:1.5px solid rgba(201,168,76,0.5); background:rgba(201,168,76,0.05); border-radius:2px; }
+  .s3-lamp { position:absolute; bottom:48px; }
+  .s3-lamp-post { width:3px; height:28px; background:#888; }
+  .s3-lamp-head { width:10px; height:5px; background:#c9a84c; border-radius:3px; margin-left:-4px; margin-top:-2px; }
+  .s3-lamp-glow { width:20px; height:20px; background:rgba(201,168,76,0.15); border-radius:50%; margin-left:-9px; margin-top:-12px; }
+  .s3-tree { position:absolute; bottom:48px; }
+  .s3-trunk { width:4px; height:14px; background:#5c3d1e; margin:0 auto; }
+  .s3-crown { width:16px; height:16px; background:#2d6b1f; border-radius:50%; margin-left:-6px; margin-top:-6px; }
+
+  /* ── SCENE 4: Modern community ── */
+  .s4-sky { position:absolute; inset:0; background:#0a1520; }
+  .s4-land { position:absolute; bottom:0; left:0; right:0; height:35px; background:#1a2a1a; }
+  .s4-road { position:absolute; bottom:30px; left:0; right:0; height:10px; background:#1a1a1a; }
+  .s4-line { position:absolute; bottom:34px; left:10%; right:10%; height:2px; }
+  .s4-house { position:absolute; bottom:40px; }
+  .s4-wall { background:#2a3a4a; border-radius:2px 2px 0 0; }
+  .s4-roof { width:0; height:0; position:absolute; }
+  .s4-window { background:#c9a84c; border-radius:1px; position:absolute; }
+  .s4-door { background:#1a1a1a; position:absolute; bottom:0; border-radius:1px 1px 0 0; }
+  .s4-tree { position:absolute; bottom:40px; }
+  .s4-trunk { width:3px; height:12px; background:#5c3d1e; margin:0 auto; }
+  .s4-crown { width:14px; height:14px; background:#1d6b1f; border-radius:50%; margin-left:-6px; margin-top:-5px; }
+  .s4-star { position:absolute; width:2px; height:2px; background:#fff; border-radius:50%; }
+  .s4-badge { position:absolute; top:10px; left:50%; transform:translateX(-50%); background:#c9a84c; color:#0a0a0a; font-size:9px; font-weight:700; letter-spacing:1px; padding:3px 8px; border-radius:10px; white-space:nowrap; }
+</style>
+
+<div class="pj-wrap">
+  <div class="pj-title">The Proprush Journey</div>
+  <div class="pj-sub">From raw land to your dream community</div>
+
+  <div class="stages" id="stages">
+
+    <div class="stage active" data-idx="0" onclick="activateStage(0)">
+      <div class="stage-inner">
+        <div class="scene">
+          <div class="s1-sky"></div>
+          <div class="s1-sun"></div>
+          <div class="s1-hill"></div>
+          <div class="s1-grass"></div>
+          <div class="s1-dirt"></div>
+          <div class="s1-rock"></div>
+          <div class="s1-rock2"></div>
+          <div class="s1-tree" style="bottom:56px;left:18px">
+            <div class="s1-leaves"></div>
+            <div class="s1-trunk"></div>
+          </div>
+          <div class="s1-tree" style="bottom:56px;right:22px">
+            <div class="s1-leaves" style="width:16px;height:16px;margin-left:-6px"></div>
+            <div class="s1-trunk" style="height:15px"></div>
+          </div>
+        </div>
+        <div class="stage-footer">
+          <div class="stage-num">Step 01</div>
+          <div class="stage-name">Raw Land</div>
+          <div class="stage-desc">Prime land acquired in growth corridors</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="connector"><div class="conn-line"></div><div class="conn-arrow"></div></div>
+
+    <div class="stage" data-idx="1" onclick="activateStage(1)">
+      <div class="stage-inner">
+        <div class="scene">
+          <div class="s2-bg"></div>
+          <div class="s2-land"></div>
+          <div style="position:absolute;bottom:40px;left:0;right:0;height:3px;background:#5c3d1e"></div>
+          <div class="s2-pole" style="left:22px;height:60px"></div>
+          <div class="s2-pole" style="right:22px;height:55px"></div>
+          <div class="s2-pole" style="left:50%;height:65px;margin-left:-1px"></div>
+          <div class="s2-string" style="bottom:98px;left:22px;width:calc(50% - 22px)"></div>
+          <div class="s2-string" style="bottom:93px;left:50%;width:calc(50% - 22px)"></div>
+          <div class="s2-string" style="bottom:88px;left:22px;right:22px"></div>
+          <div class="s2-flag" style="bottom:98px;left:22px"></div>
+          <div class="s2-flag" style="bottom:93px;left:50%;background:#27ae60"></div>
+          <div style="position:absolute;bottom:44px;left:50%;transform:translateX(-50%);background:rgba(201,168,76,0.15);border:1px dashed #c9a84c;width:90px;height:50px;border-radius:2px"></div>
+          <div style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);color:#c9a84c;font-size:9px;letter-spacing:1px;white-space:nowrap">DTCP Survey</div>
+        </div>
+        <div class="stage-footer">
+          <div class="stage-num">Step 02</div>
+          <div class="stage-name">Survey & Approval</div>
+          <div class="stage-desc">DTCP · MUDA · RERA · Panchayat certified</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="connector"><div class="conn-line"></div><div class="conn-arrow"></div></div>
+
+    <div class="stage" data-idx="2" onclick="activateStage(2)">
+      <div class="stage-inner">
+        <div class="scene">
+          <div class="s3-bg"></div>
+          <div class="s3-land"></div>
+          <div class="s3-road-h"></div>
+          <div class="s3-road-v"></div>
+          <div class="s3-plot" style="left:8px;bottom:50px;width:55px;height:65px"></div>
+          <div class="s3-plot" style="right:8px;bottom:50px;width:55px;height:65px"></div>
+          <div class="s3-plot" style="left:8px;bottom:2px;width:55px;height:42px"></div>
+          <div class="s3-plot" style="right:8px;bottom:2px;width:55px;height:42px"></div>
+          <div class="s3-lamp" style="left:3px">
+            <div class="s3-lamp-glow"></div>
+            <div class="s3-lamp-head"></div>
+            <div class="s3-lamp-post"></div>
+          </div>
+          <div class="s3-tree" style="left:44px">
+            <div class="s3-crown"></div>
+            <div class="s3-trunk"></div>
+          </div>
+          <div class="s3-tree" style="right:44px">
+            <div class="s3-crown"></div>
+            <div class="s3-trunk"></div>
+          </div>
+          <div style="position:absolute;top:10px;right:10px;background:rgba(39,174,96,0.2);border:1px solid #27ae60;border-radius:4px;padding:3px 7px;font-size:9px;color:#27ae60;letter-spacing:1px">APPROVED</div>
+        </div>
+        <div class="stage-footer">
+          <div class="stage-num">Step 03</div>
+          <div class="stage-name">Layout Development</div>
+          <div class="stage-desc">Roads, electricity, water & drainage laid</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="connector"><div class="conn-line"></div><div class="conn-arrow"></div></div>
+
+    <div class="stage" data-idx="3" onclick="activateStage(3)">
+      <div class="stage-inner">
+        <div class="scene">
+          <div class="s4-sky"></div>
+          <div class="s4-star" style="top:14px;left:20px"></div>
+          <div class="s4-star" style="top:8px;left:60px"></div>
+          <div class="s4-star" style="top:20px;right:30px"></div>
+          <div class="s4-star" style="top:12px;right:55px"></div>
+          <div class="s4-star" style="top:30px;left:40px"></div>
+          <div class="s4-land"></div>
+          <div class="s4-road"></div>
+          <div class="s4-house" style="left:8px">
+            <div class="s4-wall" style="width:46px;height:44px;position:relative">
+              <div class="s4-window" style="width:10px;height:9px;top:8px;left:6px"></div>
+              <div class="s4-window" style="width:10px;height:9px;top:8px;right:6px"></div>
+              <div class="s4-door" style="width:10px;height:16px;left:50%;transform:translateX(-50%)"></div>
+            </div>
+            <div style="width:0;height:0;border-left:26px solid transparent;border-right:26px solid transparent;border-bottom:18px solid #1e3a5a;transform:rotate(180deg);margin-top:-1px"></div>
+          </div>
+          <div class="s4-house" style="right:8px">
+            <div class="s4-wall" style="width:46px;height:44px;position:relative;background:#2a4a3a">
+              <div class="s4-window" style="width:10px;height:9px;top:8px;left:6px"></div>
+              <div class="s4-window" style="width:10px;height:9px;top:8px;right:6px"></div>
+              <div class="s4-door" style="width:10px;height:16px;left:50%;transform:translateX(-50%)"></div>
+            </div>
+            <div style="width:0;height:0;border-left:26px solid transparent;border-right:26px solid transparent;border-bottom:18px solid #1a4a2a;transform:rotate(180deg);margin-top:-1px"></div>
+          </div>
+          <div class="s4-tree" style="left:58px">
+            <div class="s4-crown"></div>
+            <div class="s4-trunk"></div>
+          </div>
+          <div class="s4-tree" style="right:58px">
+            <div class="s4-crown"></div>
+            <div class="s4-trunk"></div>
+          </div>
+          <div class="s4-badge">Dream Community</div>
+        </div>
+        <div class="stage-footer">
+          <div class="stage-num">Step 04</div>
+          <div class="stage-name">Your Dream Plot</div>
+          <div class="stage-desc">Ready to build · Clear title in your name</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="progress-row">
+    <div class="prog-step"><div class="prog-fill" id="p0" style="width:100%"></div></div>
+    <div class="prog-step"><div class="prog-fill" id="p1"></div></div>
+    <div class="prog-step"><div class="prog-fill" id="p2"></div></div>
+    <div class="prog-step"><div class="prog-fill" id="p3"></div></div>
+  </div>
+  <div class="prog-label">
+    <div class="pl-item active" id="pl0">Raw Land</div>
+    <div class="pl-item" id="pl1">Approved</div>
+    <div class="pl-item" id="pl2">Developed</div>
+    <div class="pl-item" id="pl3">Ready</div>
+  </div>
+
+  <button class="auto-btn" id="autoBtn" onclick="toggleAuto()">▶ Auto Play Journey</button>
+</div>
+
+<script>
+  let current = 0;
+  let autoPlay = null;
+
+  function activateStage(idx) {
+    document.querySelectorAll('.stage').forEach((s,i) => s.classList.toggle('active', i === idx));
+    document.querySelectorAll('.pl-item').forEach((p,i) => p.classList.toggle('active', i === idx));
+    for (let i = 0; i < 4; i++) {
+      document.getElementById('p'+i).style.width = i <= idx ? '100%' : '0%';
+    }
+    current = idx;
+  }
+
+  function toggleAuto() {
+    const btn = document.getElementById('autoBtn');
+    if (autoPlay) {
+      clearInterval(autoPlay);
+      autoPlay = null;
+      btn.textContent = '▶ Auto Play Journey';
+    } else {
+      btn.textContent = '⏸ Pause';
+      autoPlay = setInterval(() => {
+        const next = (current + 1) % 4;
+        activateStage(next);
+      }, 1800);
+    }
+  }
+</script>
+
     </div>
   </div>
 </section>
