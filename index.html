@@ -739,6 +739,47 @@
   </div>
   <button class="auto-btn" id="autoBtn" onclick="toggleAuto()">▶ Auto Play Journey</button>
 </div>
+      <script>
+  let currentStage = 0;
+  let autoPlay = false;
+  let interval;
+
+  const totalStages = 4;
+
+  function activateStage(idx) {
+    currentStage = idx;
+
+    document.querySelectorAll('.stage').forEach((el, i) => {
+      el.classList.toggle('active', i === idx);
+    });
+
+    for (let i = 0; i < totalStages; i++) {
+      document.getElementById('p' + i).style.width = i <= idx ? '100%' : '0%';
+    }
+
+    document.querySelectorAll('.pl-item').forEach((el, i) => {
+      el.classList.toggle('active', i === idx);
+    });
+  }
+
+  function nextStage() {
+    currentStage = (currentStage + 1) % totalStages;
+    activateStage(currentStage);
+  }
+
+  function toggleAuto() {
+    autoPlay = !autoPlay;
+    const btn = document.getElementById('autoBtn');
+
+    if (autoPlay) {
+      btn.innerText = "⏸ Pause Journey";
+      interval = setInterval(nextStage, 2000);
+    } else {
+      btn.innerText = "▶ Auto Play Journey";
+      clearInterval(interval);
+    }
+  }
+</script>
 
     </div>
   </div>
